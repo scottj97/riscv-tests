@@ -54,6 +54,37 @@ RVTEST_CODE_BEGIN
   TEST_CASE(28, x0, 0, csrrsi x0, cycle, 0);
 #endif
 
+#ifdef __MACHINE_MODE
+# Show correspondence of mcycle & minstret:
+  csrr x2,mcycle
+  addi x2,x2,100
+  csrw minstret,x2
+  csrr x4,mcycle
+  csrr x4,minstret
+
+# If RV32, play with high CSRs
+#if __riscv_xlen == 32
+  li x3,1
+  csrw mcycleh,x3
+  csrr x4,mcycleh
+  addi x3,x3,1
+  csrw minstreth,x3
+  csrr x4,minstreth
+  csrr x4,mcycleh
+  addi x3,x3,1
+  csrw mhpmcounter3h,x3
+  csrr x4,mhpmcounter3h
+  csrr x4,minstreth
+  csrr x4,mcycleh
+
+  csrr x4,cycleh
+  csrr x4,instreth
+  csrr x4,hpmcounter3h
+#endif
+#endif
+
+
+
   TEST_CASE(20, a0,         0, csrw sscratch, zero; csrr a0, sscratch);
   TEST_CASE(21, a0,         0, csrrwi a0, sscratch, 0; csrrwi a0, sscratch, 0xF);
   TEST_CASE(22, a0,      0x1f, csrrsi x0, sscratch, 0x10; csrr a0, sscratch);
@@ -123,6 +154,7 @@ RVTEST_CODE_BEGIN
 #ifdef __MACHINE_MODE
   TEST_CASE(14, a0, 255, li a0, 255; csrrw a0, cycle, x0);
 #endif
+
 
   # Make sure reading status in user mode causes an exception.
   # Don't run in supervisor, as we don't delegate illegal instruction traps.
